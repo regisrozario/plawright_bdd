@@ -1,0 +1,26 @@
+{
+  "name": "playwright_automation_framework",
+  "version": "1.0.0",
+  "description": "Playwright Test automation framework boilerplate (POM, custom fixtures, route mocking) demoed against saucedemo.com for Senior QA Automation Architect interview prep.",
+  "main": "index.js",
+  "scripts": {
+    "generate": "bddgen",
+    "test": "bddgen && playwright test",
+    "test:headed": "bddgen && playwright test --headed",
+    "test:ui": "bddgen && playwright test --ui",
+    "test:chromium": "bddgen && playwright test --project=chromium",
+    "report": "playwright show-report",
+    "mcp": "playwright-mcp --isolated --allowed-origins \"https://www.saucedemo.com;https://saucedemo.com\" --output-dir .mcp-output --save-session"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/mcp": "^0.0.84",
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^26.6.6",
+    "playwright-bdd": "^9.2.1",
+    "typescript": "^7.0.2"
+  }
+}
