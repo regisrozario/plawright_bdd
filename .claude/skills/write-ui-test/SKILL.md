@@ -1,12 +1,12 @@
 ---
 name: write-ui-test
-description: Write a new Playwright-BDD UI test for this project (plawright_bdd) from a plain-English scenario. Explores the real saucedemo.com flow live via the Playwright MCP server to confirm actual selectors/behavior before writing the .feature file and step definitions, instead of guessing or trusting memory. Runs the new scenario twice to confirm it isn't flaky before finishing. Use when asked to "add a UI test for X", "write a BDD test for Y flow", or similar, for this project.
+description: Write a new Playwright-BDD UI test for this project (plawright_bdd) from a plain-English scenario. Explores the real apple.com flow live (read-only) via the Playwright MCP server to confirm actual selectors/behavior before writing the .feature file and step definitions, instead of guessing or trusting memory. Runs the new scenario twice to confirm it isn't flaky before finishing. Use when asked to "add a UI test for X", "write a BDD test for Y flow", or similar, for this project.
 ---
 
 # Write UI Test (Playwright BDD)
 
 Turns a plain-English scenario into a working Gherkin `.feature` + step-definition
-pair in this repo, verified live against saucedemo.com rather than written from
+pair in this repo, verified live against apple.com rather than written from
 assumption. The point of this skill is the verification step — don't skip it even
 when the flow "obviously" matches something already in `pages/`.
 
@@ -29,8 +29,11 @@ guess what "should work" means.
    Gherkin or step code, drive the actual scenario through the Playwright MCP
    server (tools appear as `mcp__playwright__browser_*` — navigate, snapshot,
    click, type, etc.; load the schema via ToolSearch if not already available).
-   Navigate saucedemo.com, perform the scenario's actions, and capture:
-   - the real selectors/test-ids involved (prefer what's actually in the DOM
+   Navigate apple.com, perform the scenario's actions (read-only — see
+   Guardrails), and capture:
+   - the real selectors involved — Apple's class names are hashed CSS modules
+     (e.g. `ProductTile_pricing__mJzcd`), so prefer roles, `data-*` attributes
+     and `[class*="Prefix_"]` matches over full class names (prefer what's actually in the DOM
      over what a page object's existing comments claim — if a page object is
      stale, note it, don't silently trust it)
    - the real resulting state/error text, verbatim (e.g. don't assume an error
@@ -61,7 +64,8 @@ guess what "should work" means.
    flakiness this is checking for). Both runs must pass. If either run fails or
    the two runs disagree, treat that as a real finding: debug why (timing,
    selector too broad, test isolation issue), fix it, and run twice again from
-   scratch. Don't report success after only one green run.
+   scratch. Don't report success after only one green run. (Two runs is the
+   ceiling too — this is a production site, don't loop it.)
 
 6. **Report concisely.** State which `.feature` scenario(s) and step file(s)
    were added/changed, confirm both verification runs passed, and flag anything
@@ -70,9 +74,12 @@ guess what "should work" means.
    elsewhere") — that's a real signal worth surfacing, not just a side note.
 
 ## Guardrails
-- Stay within the MCP server's configured scope (saucedemo.com) — this project
-  deliberately avoids pointing automation at any real production site; don't
-  navigate elsewhere during exploration even if it would be "faster to check."
+- Stay within the MCP server's configured scope (apple.com) and the read-only
+  rules in `CLAUDE.md`: public pages only, no sign-in, never add to bag, check
+  out or submit forms, keep exploration to a handful of page loads. If a
+  requested scenario needs any of those, say so and stop; don't write it.
+- If you hit a 403 or a bot-challenge page, stop and report it; don't retry
+  harder or try to evade detection.
 - Don't modify unrelated scenarios/specs while adding a new one.
 - Keep step definitions thin — they call page-object methods, they don't contain
   assertions-worth-of-logic inline beyond what the existing steps already do.

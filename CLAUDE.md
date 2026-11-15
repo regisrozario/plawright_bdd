@@ -5,21 +5,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 A Playwright Test + playwright-bdd (TypeScript) UI automation framework, BDD-style
-(Gherkin `.feature` files + step definitions), demoed against
-[saucedemo.com](https://www.saucedemo.com) — a public Sauce Labs storefront built
-specifically for automation practice. This target is deliberate, not incidental:
-tests here must not be pointed at a real production site (e.g. Apple's actual
-store) without that decision being explicitly re-opened — scripted/automated
-traffic against a live e-commerce platform the user doesn't control risks ToS
-violations and bot-detection blocking.
+(Gherkin `.feature` files + step definitions), run against live
+apple.com.
+
+**Target decision (re-opened 2026-11-14):** the suite now runs against live
+[apple.com](https://www.apple.com), replacing saucedemo.com. The user accepted the
+trade-off knowingly: Apple's website terms of use prohibit robots/scraping and
+the site sits behind bot detection. The decision is scoped to **read-only,
+low-volume** automation, and these limits are part of it:
+
+- Public pages only: no sign-in, no Apple ID, no real accounts.
+- Never add to bag, check out, submit forms, or trigger anything with side effects.
+- `workers: 1`, `fullyParallel: false`, `retries: 0` in `playwright.config.ts`.
+  Don't raise these; a retry is another hit on production and would hide a bot
+  block as a "flake".
+- CI is `workflow_dispatch` (manual) only; don't add push/PR/schedule triggers.
+- No load, crawl or loop-style scenarios.
+
+Expect brittleness: Apple's class names are CSS-module hashes (e.g.
+`ProductTile_pricing__mJzcd`) that change on deploy, so page objects match
+stable prefixes / data attributes / roles only. Product names and prices change,
+so assert on shape (`From $X`), not exact values, except for long-lived
+products. A 403 or challenge page means bot detection kicked in; stop rather
+than retry harder.
+
+The old saucedemo scenarios (login, inventory, cart) live in git history:
+`git show 55c19b4:features/login.feature` etc.
 
 ## Commands
 
 ```
-npm test              # bddgen then playwright test (all scenarios, headed Chromium, records video)
+npm test              # bddgen then playwright test (all scenarios, headed Chrome, 1 worker, records video)
 npm run test:headed   # same, explicit --headed
 npm run test:ui       # same, Playwright's interactive UI mode
-npm run test:chromium # same, --project=chromium explicitly
+npm run test:smoke    # same, --project=smoke explicitly (the only project)
 npm run generate       # just bddgen, no test run (inspect .features-gen/ output)
 npm run report         # open the last HTML report
 npx tsc --noEmit       # typecheck
@@ -32,7 +51,7 @@ directly runnable — `bddgen` compiles them into real Playwright spec files und
 them. Running `npx playwright test` directly without `bddgen` first will run
 against a stale or empty `.features-gen/`.
 
-To run a single scenario: `npx bddgen && npx playwright test features/login` (or
+To run a single scenario: `npx bddgen && npx playwright test features/bag` (or
 any path/substring `playwright test` normally accepts — it matches against the
 generated spec paths under `.features-gen/`, not the `.feature` files directly).
 
@@ -56,12 +75,13 @@ steps/*.steps.ts     (createBdd(test).Given/When/Then — glue between Gherkin t
                        and Page Object calls)
         |  destructures injected page-object fixtures
         v
-fixtures/pages.fixture.ts  (extends playwright-bdd's `test`, injects loginPage/
-                            inventoryPage/cartPage as fixtures — the DI layer)
+fixtures/pages.fixture.ts  (extends playwright-bdd's `test`, injects homePage/
+                            productListingPage/bagPage as fixtures — the DI layer)
         |  constructs
         v
-pages/*.page.ts      (Page Object Model: BasePage + LoginPage, InventoryPage,
-                       CartPage — locators + page interactions, no assertions)
+pages/*.page.ts      (Page Object Model: BasePage (owns the shared #globalnav)
+                       + HomePage, ProductListingPage, BagPage — locators +
+                       page interactions, no assertions)
 ```
 
 **Non-obvious constraint**: `fixtures/pages.fixture.ts` must extend `test`
@@ -83,7 +103,7 @@ params from step signatures.
 **Tag-scoped hooks**: `steps/hooks.steps.ts` has `Before`/`After` hooks scoped
 via `createBdd(test).Before({ tags: '@content-validation' }, fn)` — these only
 fire for scenarios carrying that tag (currently one scenario in
-`features/inventory_content_validation.feature`), not globally. Use this pattern
+`features/product_content_validation.feature`), not globally. Use this pattern
 for setup/teardown that's specific to a category of scenario rather than adding
 branches to a hook that runs for everything.
 
@@ -102,14 +122,14 @@ constraints — don't bump without re-checking both.
 ## Playwright MCP integration
 
 `@playwright/mcp` is a devDependency here, but the MCP server registration lives
-one level up, at `../.mcp.json` (the Claude Code project root), not inside this
-folder — that's where Claude Code (or any MCP client) reads project-scoped MCP
-servers from. It's configured with `--isolated`, `--allowed-origins` scoped to
-saucedemo.com, and `--save-session --output-dir .mcp-output` (gitignored) so
-every agent-driven session leaves a transcript. **`--allowed-origins` is
+in this folder's `.mcp.json`, so open Claude Code with `plawright_bdd/` as the
+project root for it to load. It's configured with `--isolated`,
+`--allowed-origins` scoped to apple.com, and `--save-session --output-dir` so
+every agent-driven session leaves a transcript (note: `--output-dir` still
+points at the old `../Playwright_Automation_Framework/.mcp-output` path). **`--allowed-origins` is
 explicitly documented by Playwright MCP as not a security boundary** (doesn't
 affect redirects, isn't strictly enforced) — treat it as an intent guard
-consistent with the saucedemo-only decision above, not a guarantee.
+consistent with the read-only apple.com decision above, not a guarantee.
 
 ## Adding new UI tests
 

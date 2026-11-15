@@ -2,11 +2,14 @@
 
 Real, runnable **Playwright Test + playwright-bdd** (TypeScript) boilerplate built
 for interview prep for **Senior QA Automation Architect, Apple Store Online**
-(see `../Interview_Prep/Apple_QA_Architect/`). Demoed against
-[saucedemo.com](https://www.saucedemo.com) — a public storefront Sauce Labs built
-specifically for automation practice — not Apple's live production site, to avoid
-any ToS/bot-detection risk from scripted traffic hitting a real production
-e-commerce platform.
+(see `../Interview_Prep/Apple_QA_Architect/`). Runs **read-only** against live
+[apple.com](https://www.apple.com) (switched from saucedemo.com on 2026-11-14).
+
+> **Scope / risk.** Apple's terms of use prohibit robots and scraping, and the
+> site has bot detection. This suite is limited to public pages and
+> low-volume browsing: no sign-in, no add-to-bag or checkout, 1 worker, no
+> retries, CI on manual trigger only. See `CLAUDE.md` for the full rules. The
+> previous saucedemo scenarios are in git history (commit `55c19b4`).
 
 ## Setup already done
 - `npm install` (installs `@playwright/test` pinned to **1.55.1** — latest, 1.65,
@@ -40,7 +43,8 @@ runnable directly, they get compiled into real Playwright spec files in
 features/     Gherkin .feature files — the BDD scenarios, business-readable
 steps/        Given/When/Then step definitions (createBdd) implementing each
               feature's steps, plus tag-scoped Before/After hooks
-pages/        Page Object Model classes (BasePage + LoginPage, InventoryPage, CartPage)
+pages/        Page Object Model classes (BasePage with the shared global nav +
+              HomePage, ProductListingPage, BagPage)
 fixtures/     pages.fixture.ts — extends playwright-bdd's own `test` with the
               page objects as injected fixtures (the DI mechanism)
 utils/        Framework-level helpers (mockRoute.ts — page.route() mock factory)
@@ -51,12 +55,16 @@ See `../Interview_Prep/Apple_QA_Architect/` for the rest of the weekend's genera
 coding/verbal prep (this folder only holds the real, working Playwright code).
 
 ## What each feature demonstrates
-- `features/login.feature` + `steps/login.steps.ts` — basic POM usage via BDD
-  steps, happy path + error state.
-- `features/inventory_content_validation.feature` + `steps/inventory.steps.ts`
-  — the actual shape of the job's "content validation" mandate, scaled down:
-  scrape every rendered product and assert well-formed name/price. Point the
-  same `getAllProducts()` scrape at two surfaces (two viewports, two locales,
+- `features/global_navigation.feature` + `steps/navigation.steps.ts` — a
+  Scenario Outline over the shared `#globalnav` (Mac, iPhone): the nav is
+  modelled once on `BasePage` because every apple.com page has it.
+- `features/bag.feature` + `steps/bag.steps.ts` — new-visitor empty-bag check
+  (read-only; never adds items).
+- `features/product_content_validation.feature` + `steps/product.steps.ts`
+  — the actual shape of the job's "content validation" mandate, on the real
+  Apple Store: scrape every product tile on `/mac/` and assert a non-empty name
+  and a well-formed `From $X` starting price. Point the same `getAllProducts()`
+  scrape at two surfaces (two viewports, two locales,
   etc.) and diff the results to get the cross-platform check from
   `../Interview_Prep/Apple_QA_Architect/08_content_validation_diff.py`. Tagged
   `@content-validation`, which is what the tag-scoped hooks in
@@ -83,7 +91,10 @@ coding/verbal prep (this folder only holds the real, working Playwright code).
 - **Tag-scoped hooks** (`steps/hooks.steps.ts`) — different setup/teardown
   behavior for different categories of scenario without branching inside a
   shared hook.
-- **Content validation at scale** — `InventoryPage.getAllProducts()` is the
+- **Resilient locators on a real site** — Apple's hashed CSS-module classes
+  force prefix/data-attribute/role selectors and a `visible: true` filter
+  (the gallery renders hidden duplicate tiles), a realistic talking point.
+- **Content validation at scale** — `ProductListingPage.getAllProducts()` is the
   primitive; the cross-platform diff logic already exists in
   `Interview_Prep/Apple_QA_Architect/08_content_validation_diff.py`.
 - **CI integration** (`.github/workflows/playwright.yml`) — not wired to a real
@@ -92,14 +103,14 @@ coding/verbal prep (this folder only holds the real, working Playwright code).
 
 ## Playwright MCP (agentic layer)
 `@playwright/mcp` is installed as a devDependency and registered as an MCP
-server at `../.mcp.json` (workspace-root-level — Claude Code/other MCP clients
-pick it up from there, not from inside this subfolder). Once a client loads
+server in this folder's `.mcp.json` (open Claude Code with `plawright_bdd/` as
+the project root to load it). Once a client loads
 that config, an LLM agent gets real browser-control tools (navigate, click,
 snapshot the accessibility tree, extract text) instead of a fixed script —
 this is the mechanism behind the showcase project in
 `../Interview_Prep/Apple_QA_Architect/00_playwright_mcp_showcase_project.md`.
 
-Config (`../.mcp.json`):
+Config (`.mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -108,7 +119,7 @@ Config (`../.mcp.json`):
       "args": [
         "-y", "@playwright/mcp@latest",
         "--isolated",
-        "--allowed-origins", "https://www.saucedemo.com;https://saucedemo.com",
+        "--allowed-origins", "https://www.apple.com;https://apple.com",
         "--output-dir", ".../Playwright_Automation_Framework/.mcp-output",
         "--save-session"
       ]
@@ -117,8 +128,8 @@ Config (`../.mcp.json`):
 }
 ```
 - `--isolated` — in-memory browser profile, nothing persisted to disk between
-  sessions (no lingering saucedemo cookies/state).
-- `--allowed-origins` — restricts the browser to saucedemo.com. **Read the
+  sessions (no lingering apple.com cookies/state).
+- `--allowed-origins` — restricts the browser to apple.com. **Read the
   fine print**: Playwright MCP's own docs say this is *not* a security
   boundary and doesn't affect redirects — treat it as an intent guard/defense
   in depth, not a guarantee the agent can never navigate elsewhere.
