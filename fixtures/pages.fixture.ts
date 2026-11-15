@@ -2,11 +2,17 @@ import { test as base } from 'playwright-bdd';
 import { HomePage } from '../pages/home.page';
 import { ProductListingPage } from '../pages/product-listing.page';
 import { BagPage } from '../pages/bag.page';
+import { SearchResultsPage } from '../pages/search-results.page';
+import { ProductPage } from '../pages/product.page';
+import { BuyConfiguratorPage } from '../pages/buy-configurator.page';
 
 type Pages = {
   homePage: HomePage;
   productListingPage: ProductListingPage;
   bagPage: BagPage;
+  searchResultsPage: SearchResultsPage;
+  productPage: ProductPage;
+  buyConfiguratorPage: BuyConfiguratorPage;
 };
 
 /**
@@ -29,6 +35,15 @@ export const test = base.extend<Pages>({
   },
   bagPage: async ({ page }, use) => {
     await use(new BagPage(page));
+  },
+  searchResultsPage: async ({ page }, use) => {
+    await use(new SearchResultsPage(page));
+  },
+  productPage: async ({ page }, use) => {
+    await use(new ProductPage(page));
+  },
+  buyConfiguratorPage: async ({ page }, use) => {
+    await use(new BuyConfiguratorPage(page));
   },
 });
 
