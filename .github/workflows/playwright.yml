@@ -1,9 +1,9 @@
 name: Playwright Tests
+# Manual trigger only: the suite hits live apple.com (read-only), so it must not
+# run automatically on every push/PR. CI runs headless, which Apple's bot
+# detection is more likely to block; expect occasional 403s/challenge pages.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:

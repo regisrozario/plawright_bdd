@@ -1,12 +1,12 @@
 import { test as base } from 'playwright-bdd';
-import { LoginPage } from '../pages/login.page';
-import { InventoryPage } from '../pages/inventory.page';
-import { CartPage } from '../pages/cart.page';
+import { HomePage } from '../pages/home.page';
+import { ProductListingPage } from '../pages/product-listing.page';
+import { BagPage } from '../pages/bag.page';
 
 type Pages = {
-  loginPage: LoginPage;
-  inventoryPage: InventoryPage;
-  cartPage: CartPage;
+  homePage: HomePage;
+  productListingPage: ProductListingPage;
+  bagPage: BagPage;
 };
 
 /**
@@ -21,14 +21,14 @@ type Pages = {
  * ultimately derive from playwright-bdd's test.
  */
 export const test = base.extend<Pages>({
-  loginPage: async ({ page }, use) => {
-    await use(new LoginPage(page));
+  homePage: async ({ page }, use) => {
+    await use(new HomePage(page));
   },
-  inventoryPage: async ({ page }, use) => {
-    await use(new InventoryPage(page));
+  productListingPage: async ({ page }, use) => {
+    await use(new ProductListingPage(page));
   },
-  cartPage: async ({ page }, use) => {
-    await use(new CartPage(page));
+  bagPage: async ({ page }, use) => {
+    await use(new BagPage(page));
   },
 });
 

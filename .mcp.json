@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--isolated",
+        "--allowed-origins",
+        "https://www.apple.com;https://apple.com",
+        "--output-dir",
+        "/Users/rbernard/DSA_Learning/Playwright_Automation_Framework/.mcp-output",
+        "--save-session"
+      ]
+    }
+  }
+}

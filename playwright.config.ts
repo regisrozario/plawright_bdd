@@ -10,20 +10,25 @@ const testDir = defineBddConfig({
 
 export default defineConfig({
   testDir,
-  fullyParallel: true,
+  // Target is live apple.com (read-only). Keep traffic low and human-paced:
+  // one worker, no parallelism, no automatic retries (a retry is another hit on
+  // a production site, and it would hide bot-detection blocks as "flakes").
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  retries: 0,
+  workers: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
 
   use: {
-    baseURL: 'https://www.saucedemo.com',
+    baseURL: 'https://www.apple.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    browserName: 'chromium',
+    channel: 'chrome'
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'], headless: false, viewport: { width: 1280, height: 720 }, video: 'on' } },
+    { name: 'smoke', use: { ...devices['Desktop Chrome'], headless: false, viewport: { width: 1280, height: 720 }, video: 'on' } },
     // Install firefox/webkit with `npx playwright install firefox webkit`
     // then uncomment to run cross-browser:
     // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
