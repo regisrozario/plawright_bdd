@@ -1,6 +1,6 @@
 ---
 name: write-ui-test
-description: Write a new Playwright-BDD UI test for this project (plawright_bdd) from a plain-English scenario. Explores the real apple.com flow live (read-only) via the Playwright MCP server to confirm actual selectors/behavior before writing the .feature file and step definitions, instead of guessing or trusting memory. Runs the new scenario twice to confirm it isn't flaky before finishing. Use when asked to "add a UI test for X", "write a BDD test for Y flow", or similar, for this project.
+description: Write a new Playwright-BDD UI test for this project (plawright_bdd) from a plain-English scenario. Explores the real apple.com flow live (read-only) via the Playwright MCP server to confirm actual selectors/behavior before writing the .feature file and step definitions, instead of guessing or trusting memory. Runs the new scenario twice to confirm it isn't flaky, then (only if fully covered and green) commits on a new branch, pushes and opens a PR automatically. Use when asked to "add a UI test for X", "write a BDD test for Y flow", or similar, for this project.
 ---
 
 # Write UI Test (Playwright BDD)
@@ -72,6 +72,38 @@ guess what "should work" means.
    observed live in step 2 that contradicted an existing page object or comment
    (e.g. "the locked-out error text is actually X, not what was assumed
    elsewhere") — that's a real signal worth surfacing, not just a side note.
+
+7. **Open a PR automatically — only if everything is green.** The user has
+   standing-authorised this skill to commit, push and open a PR without asking,
+   but **only** when all of these hold:
+   - every step of the requested scenario is in the `.feature` file — nothing
+     dropped, stubbed or swapped for something else. If scope was trimmed (e.g.
+     a guardrail forced stopping before "add to bag"), the user must have
+     explicitly agreed to the trimmed version earlier in the conversation;
+   - `npx tsc --noEmit` passes;
+   - both verification runs in step 5 passed, from scratch, after the last code
+     change;
+   - no 403 / bot-challenge was hit.
+   If any of these fails, don't commit; report what's missing instead.
+
+   When they all hold:
+   1. Branch off the current default branch (never commit to `main` directly):
+      `git switch -c <short-kebab-name-for-the-scenario>`.
+   2. Stage **only** the files this skill added/changed (`features/`, `steps/`,
+      `pages/`, `fixtures/` as relevant) by explicit path — never `git add -A`;
+      leave any unrelated working-tree changes alone and mention them.
+   3. Commit with a short message naming the scenario (use the user's wording if
+      they gave one), ending with the attribution line from the system prompt.
+   4. `git push -u origin <branch>`.
+   5. If `gh` is installed and authenticated (`gh auth status`), run
+      `gh pr create --base main --title ... --body ...` and report the PR URL.
+      Otherwise, say plainly that the PR was **not** created, give the
+      `https://github.com/<owner>/<repo>/pull/new/<branch>` link printed by the
+      push, and paste a ready-to-use title and body.
+   PR body: Summary (scenario in one or two sentences, plus any read-only
+   trimming), Changes (files), Notes (live findings from step 6), and a Test
+   plan checklist (`tsc`, two separate full runs passed, no bot challenge).
+   Never merge the PR, force-push, or push to `main`.
 
 ## Guardrails
 - Stay within the MCP server's configured scope (apple.com) and the read-only
