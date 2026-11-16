@@ -12,6 +12,10 @@ When('I open the {string} product page from the search results', async ({ search
   await searchResultsPage.openProduct(product);
 });
 
+When('I open the {string} product page from the Mac lineup', async ({ productListingPage }, product: string) => {
+  await productListingPage.openProduct(product);
+});
+
 When('I choose to buy {string}', async ({ productPage }, product: string) => {
   await productPage.buy(product);
 });
@@ -33,4 +37,10 @@ When('I choose the following options:', async ({ buyConfiguratorPage }, table: D
 // Asserts state only — the button is never clicked (read-only rule).
 Then('the "Add to Bag" button should be enabled', async ({ buyConfiguratorPage }) => {
   await expect(buyConfiguratorPage.addToBagButton).toBeEnabled();
+});
+
+// Mac configurators end on an enabled "Continue" (a form submit to the next
+// step) instead of "Add to Bag". Asserts state only — never clicked.
+Then('the "Continue" button should be enabled', async ({ buyConfiguratorPage }) => {
+  await expect(buyConfiguratorPage.proceedButton).toBeEnabled({ timeout: 15_000 });
 });
