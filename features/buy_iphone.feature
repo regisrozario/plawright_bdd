@@ -8,7 +8,7 @@ Feature: Buy iPhone configurator
     When I search for "iPhone 17"
     And I open the "iPhone 17" product page from the search results
     And I choose to buy "iPhone 17"
-    And I select the "Black1" color
+    And I select the "Black" color
     And I choose the following options:
       | option       | choice                       |
       | Storage      | 256GB                        |
