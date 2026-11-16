@@ -5,3 +5,5 @@ playwright/.cache/
 blob-report/
 .features-gen/
 .mcp-output/
+reporting-labs/
+reporting-labs.history.json

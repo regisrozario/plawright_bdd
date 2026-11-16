@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
+import reportingLabs from './reporting-labs.config';
 
 const testDir = defineBddConfig({
   features: 'features/**/*.feature',
@@ -17,7 +18,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   workers: 1,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  timeout: 60 * 1000, // 1 minute per test (not per step)
+  // reporting-labs writes a single-file dashboard to reporting-labs/index.html
+  // (options in reporting-labs.config.ts); Playwright's HTML report is kept too.
+  reporter: [['list'], ['html', { open: 'never' }], ['reporting-labs', reportingLabs]],
 
   use: {
     baseURL: 'https://www.apple.com',
