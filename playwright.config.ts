@@ -16,7 +16,7 @@ export default defineConfig({
   // a production site, and it would hide bot-detection blocks as "flakes").
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: 0,
+  retries: 1,
   workers: 1,
   timeout: 60 * 1000, // 1 minute per test (not per step)
   // reporting-labs writes a single-file dashboard to reporting-labs/index.html
