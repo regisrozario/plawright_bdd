@@ -21,6 +21,21 @@ export class ProductListingPage extends BasePage {
     .filter({ visible: true });
 
   /**
+   * Opens a product's marketing page from its lineup tile. Each tile has two
+   * "Learn more, <name>" links (image + text, verified live 2026-11-15) and a
+   * hidden duplicate tile, hence visible + first.
+   */
+  async openProduct(name: string) {
+    await this.page
+      .getByRole('main')
+      .getByRole('link', { name: `Learn more, ${name}`, exact: true })
+      .filter({ visible: true })
+      .first()
+      .click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
    * Content-validation building block: scrape every visible product tile.
    * Point it at two surfaces (viewports, locales) and diff the results for a
    * cross-platform content check.

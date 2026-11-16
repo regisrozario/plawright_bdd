@@ -22,14 +22,26 @@ import { BasePage } from './base.page';
  *   bar), clicks at its position with force (which hits whichever of
  *   input/label is on top — both select the same radio), then asserts it is
  *   checked so a missed click still fails loudly.
+ *
+ * Mac configurators (verified live 2026-11-15 on /shop/buy-mac/mac-mini):
+ * - Same sequential-unlock radios, but different group names
+ *   (`processor-dimensionChip`, `memory-dimensionMemory`,
+ *   `storage-dimensionCapacity`, `ethernet_adapter-ethernetBandwidth`), so a
+ *   key may map to several `name` values; only one exists on any given page.
+ * - Once every choice is made the summary shows an enabled "Continue" submit
+ *   (data-autom="proceed") that leads to a further step, NOT "Add to Bag".
+ *   `proceedButton` exists only to assert on its state — never click it.
  */
 export const CONFIG_OPTION_GROUPS = {
-  Color: 'dimensionColor',
-  Storage: 'dimensionCapacity',
-  'Trade-in': 'tradeupinline',
-  Payment: 'purchase_option_group',
-  Connectivity: 'carrierModel',
-  AppleCare: 'applecare-options',
+  Color: ['dimensionColor'],
+  Chip: ['processor-dimensionChip'],
+  Memory: ['memory-dimensionMemory'],
+  Storage: ['dimensionCapacity', 'storage-dimensionCapacity'],
+  Ethernet: ['ethernet_adapter-ethernetBandwidth'],
+  'Trade-in': ['tradeupinline'],
+  Payment: ['purchase_option_group'],
+  Connectivity: ['carrierModel'],
+  AppleCare: ['applecare-options'],
 } as const;
 
 export type ConfigOptionGroup = keyof typeof CONFIG_OPTION_GROUPS;
@@ -38,6 +50,8 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class BuyConfiguratorPage extends BasePage {
   readonly addToBagButton = this.page.getByRole('button', { name: 'Add to Bag', exact: true });
+  /** Mac "Continue" (form submit to the next step). State assertions only. */
+  readonly proceedButton = this.page.locator('button[data-autom="proceed"]');
 
   /**
    * The radio in `group` whose accessible name starts with `choice`. Names
@@ -47,7 +61,7 @@ export class BuyConfiguratorPage extends BasePage {
    */
   option(group: ConfigOptionGroup, choice: string) {
     return this.page
-      .locator(`input[type="radio"][name="${CONFIG_OPTION_GROUPS[group]}"]`)
+      .locator(CONFIG_OPTION_GROUPS[group].map(name => `input[type="radio"][name="${name}"]`).join(', '))
       .and(this.page.getByRole('radio', { name: new RegExp(`^${escapeRegExp(choice)}`) }));
   }
 
