@@ -10,6 +10,7 @@
     "test:ui": "bddgen && playwright test --ui",
     "test:smoke": "bddgen && playwright test --project=smoke",
     "report": "playwright show-report",
+    "report-labs": "open reporting-labs/index.html",
     "mcp": "playwright-mcp --isolated --allowed-origins \"https://www.apple.com;https://apple.com\" --output-dir .mcp-output --save-session"
   },
   "keywords": [],
@@ -21,6 +22,7 @@
     "@playwright/test": "^1.55.1",
     "@types/node": "^26.6.6",
     "playwright-bdd": "^9.2.1",
+    "reporting-labs": "^0.6.24",
     "typescript": "^7.0.2"
   }
 }
